@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Elsewhere · Currency converter</title>
+<style>
+:root {
+  color-scheme: dark;
+  --ink: oklch(.93 .008 80);
+  --muted: oklch(.72 .009 250);
+  --accent: oklch(.82 .12 75);
+  --paper: oklch(.275 .012 250);
+  --line: oklch(.38 .012 250);
+  --tint: oklch(.34 .012 250);
+  --error: oklch(.84 .11 35);
+  --canvas: oklch(.20 .014 250);
+  --frame: oklch(.35 .012 250);
+  --metal: linear-gradient(145deg, oklch(.78 .009 250), oklch(.58 .014 250) 42%, oklch(.72 .009 250) 75%, oklch(.5 .01 250));
+  --key: linear-gradient(oklch(.38 .013 250), oklch(.30 .013 250));
+  --raised: inset 0 1px 0 oklch(1 0 0 / .15), 0 2px 2px oklch(0 0 0 / .45), 0 5px 8px oklch(0 0 0 / .18);
+}
+* { box-sizing: border-box; }
+body { margin: 0; padding: 48px 16px; min-height: 100dvh; display: grid; place-items: center; background: var(--canvas); color: var(--ink); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
+.phone { width: min(100%, 410px); min-width: 0; background: repeating-linear-gradient(0deg, transparent 0 2px, oklch(1 0 0 / .012) 2px 3px), linear-gradient(115deg, oklch(.32 .014 250), var(--paper) 42%, oklch(.255 .012 250)); border: 7px solid var(--frame); border-radius: 44px; overflow: hidden; box-shadow: 0 0 0 1px oklch(.13 .01 250), 0 0 0 2px oklch(.48 .014 250), inset 0 1px 1px oklch(1 0 0 / .15), 0 8px 12px oklch(0 0 0 / .3), 0 30px 70px oklch(0 0 0 / .4); }
+.status { height: 54px; padding: 15px 24px 10px; display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: 600; }
+.status svg { width: 62px; height: 14px; }
+.home { width: 110px; height: 4px; border-radius: 4px; background: oklch(.16 .01 250); box-shadow: 0 1px 0 oklch(1 0 0 / .13); margin: 8px auto 10px; }
+button, input, select { font: inherit; color: inherit; touch-action: manipulation; }
+button, select { cursor: pointer; }
+button { border: 0; }
+button:active { transform: scale(.96); }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; }
+.app { width: 100%; min-height: 666px; display: flex; flex-direction: column; padding: 18px 24px 20px; }
+header { margin-bottom: 28px; display: flex; align-items: center; justify-content: space-between; }
+h1 { margin: 0; font-size: 20px; font-weight: 600; letter-spacing: -.6px; color: oklch(.78 .012 250); text-shadow: 0 1px 0 oklch(.08 .01 250); }
+.amount-panel { padding: 18px 20px 12px; margin-bottom: 24px; border: 5px solid oklch(.16 .009 250); border-radius: 17px; background: linear-gradient(150deg, oklch(.26 .025 80), oklch(.19 .014 80) 65%); color: var(--accent); box-shadow: 0 1px 0 oklch(1 0 0 / .15), 0 -1px 1px oklch(0 0 0 / .5), inset 0 3px 9px oklch(0 0 0 / .6); --line: oklch(.82 .12 75 / .4); }
+.amount-panel .amount-label { color: oklch(.76 .045 80); }
+.amount-panel :focus-visible { outline-color: var(--ink); }
+.amount-panel .coin { background: transparent; color: var(--accent); border-radius: 8px; box-shadow: inset 0 0 0 1px oklch(.82 .12 75 / .25); text-shadow: 0 0 8px oklch(.82 .12 75 / .2); }
+.amount-panel select { font-size: 16px; font-weight: 500; }
+.amount-panel .amount { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; text-align: right; letter-spacing: -2px; text-shadow: 0 0 14px oklch(.82 .12 75 / .18); }
+select option { color: var(--ink); background: var(--paper); }
+.currency { display: flex; align-items: center; gap: 12px; }
+.coin { width: 36px; height: 36px; flex-shrink: 0; display: grid; place-items: center; border-radius: 50%; background: var(--metal); color: oklch(.22 .012 250); font-size: 14px; font-weight: 600; text-shadow: 0 1px 0 oklch(1 0 0 / .35); box-shadow: inset 0 0 0 2px oklch(.25 .012 250), inset 0 0 0 3px oklch(1 0 0 / .25), 0 2px 3px oklch(0 0 0 / .4); }
+select { min-height: 44px; min-width: 0; max-width: 100%; border: 0; background: transparent; font-size: 16px; font-weight: 500; flex: 1; }
+.amount-label { display: block; margin-top: 24px; font-size: 12px; color: var(--muted); }
+.amount { display: block; width: 100%; min-width: 0; margin-top: 8px; padding: 0 0 6px; border: 0; border-bottom: 1px solid transparent; background: transparent; font-size: clamp(32px, 10vw, 48px); letter-spacing: -1.8px; font-variant-numeric: tabular-nums; }
+input.amount, select { border: 1px solid transparent; border-radius: 8px; padding: 6px 8px; }
+input.amount:focus, select:focus, input.amount:active, select:active { outline: 2px solid var(--ink); outline-offset: 2px; background-color: oklch(1 0 0 / .055); box-shadow: inset 0 2px 4px oklch(0 0 0 / .25); }
+.amount[aria-invalid="true"] { border-color: var(--error); }
+.error { min-height: 17px; margin: 6px 0 0; font-size: 12px; line-height: 1.5; color: var(--error); }
+.row { display: grid; grid-template-columns: 36px minmax(55px, 1fr) minmax(0, 1.6fr) 44px; align-items: center; gap: 10px; padding: 20px 0; border-bottom: 1px solid oklch(.17 .01 250); box-shadow: 0 1px 0 oklch(1 0 0 / .055); }
+.name strong { font-size: 15px; font-weight: 500; }
+.name small { display: block; margin-top: 4px; font-size: 11px; line-height: 1.4; color: var(--muted); overflow-wrap: anywhere; }
+.value { text-align: right; font-size: 23px; letter-spacing: -.5px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; text-shadow: 0 2px 1px oklch(0 0 0 / .5); }
+.remove { display: grid; place-items: center; min-width: 44px; min-height: 44px; padding: 0; background: transparent; border: 0; border-radius: 8px; color: var(--muted); }
+.remove svg { width: 16px; height: 16px; }
+.add { min-height: 44px; padding: 0 12px; background: var(--key); color: var(--ink); border: 1px solid oklch(.17 .01 250); border-radius: 12px; font-size: 13px; box-shadow: var(--raised); text-shadow: 0 1px 1px oklch(0 0 0 / .6); }
+.add:not(:disabled):active, .actions button:active { transform: translateY(2px); box-shadow: inset 0 2px 4px oklch(0 0 0 / .4), 0 1px 0 oklch(1 0 0 / .08); }
+.add:disabled { color: var(--muted); cursor: default; }
+footer { margin-top: auto; padding-top: 32px; text-align: center; font-size: 11px; color: var(--muted); }
+.empty { padding: 26px 0; font-size: 14px; color: var(--muted); }
+dialog { width: min(350px, calc(100vw - 32px)); padding: 24px; border: 1px solid var(--line); border-radius: 18px; background: var(--paper); color: var(--ink); }
+dialog::backdrop { background: oklch(.24 .014 160 / .3); }
+dialog h2 { margin: 0 0 24px; font-size: 20px; font-weight: 500; letter-spacing: -.5px; }
+dialog label { display: block; color: var(--muted); font-size: 12px; }
+dialog select { width: 100%; margin: 8px 0 24px; color: var(--ink); background-color: var(--paper); border-color: var(--line); color-scheme: dark; box-shadow: inset 0 2px 4px oklch(0 0 0 / .25); }
+dialog select:focus, dialog select:active { background-color: var(--tint); }
+.actions { display: flex; justify-content: flex-end; gap: 12px; }
+.actions button { min-height: 44px; padding: 0 16px; border-radius: 8px; background: var(--key); box-shadow: var(--raised); }
+.actions .primary { background: var(--accent); color: var(--paper); }
+@media (hover: hover) and (pointer: fine) {
+  .add:not(:disabled):hover, .actions button:not(.primary):hover { background: linear-gradient(oklch(.42 .013 250), oklch(.33 .013 250)); }
+  .remove:hover { color: var(--ink); background: oklch(1 0 0 / .04); }
+  .amount:hover, select:hover { border-color: var(--line); }
+  .amount[aria-invalid="true"]:hover { border-bottom-color: var(--error); }
+}
+@media (max-width: 450px) { body { padding: 16px 10px; } .app { padding-left: 20px; padding-right: 20px; } .row { gap: 8px; } .value { font-size: 21px; } }
+@media (max-width: 370px) { .phone { border-width: 5px; border-radius: 36px; } .app { padding-left: 16px; padding-right: 16px; } .row { grid-template-columns: 30px minmax(45px, 1fr) minmax(0, 1.6fr) 44px; gap: 6px; } .row .coin { width: 30px; height: 30px; } .value { font-size: 19px; } }
+</style>
+</head>
+<body>
+<div class="phone">
+<div class="status" aria-hidden="true"><span>9:41</span><svg viewBox="0 0 62 14" fill="none"><path d="M1 12V9h3v3H1Zm5 0V6h3v6H6Zm5 0V3h3v9h-3Zm5 0V0h3v12h-3Z" fill="currentColor"/><path d="M24 4a10 10 0 0 1 14 0M27 7a6 6 0 0 1 8 0M30 10a2 2 0 0 1 2 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><rect x="43" y="2" width="16" height="10" rx="2" stroke="currentColor"/><rect x="45" y="4" width="12" height="6" rx="1" fill="currentColor"/><path d="M61 5v4" stroke="currentColor" stroke-width="2"/></svg></div>
+<main class="app">
+  <header><h1>elsewhere</h1></header>
+  <form id="converter" class="amount-panel">
+    <div class="currency"><span class="coin" id="base-symbol" aria-hidden="true">$</span><select id="from" aria-label="Base currency"></select></div>
+    <label class="amount-label" for="amount">Amount</label>
+    <input class="amount" id="amount" value="100" aria-describedby="amount-error" inputmode="decimal" autocomplete="off" spellcheck="false" maxlength="15">
+    <p class="error" id="amount-error" role="status"></p>
+  </form>
+  <button class="add" id="add">+ Add currency</button>
+  <section id="rows" aria-label="Converted amounts" aria-live="polite"></section>
+  <footer>Sample rates · Not live</footer>
+</main>
+<div class="home" aria-hidden="true"></div>
+</div>
+<dialog id="add-dialog" aria-labelledby="dialog-title">
+  <form id="add-form">
+    <h2 id="dialog-title">Add currency</h2>
+    <label for="add-select">Currency</label>
+    <select id="add-select"></select>
+    <div class="actions"><button type="button" id="cancel-add">Cancel</button><button class="primary" type="submit">Add</button></div>
+  </form>
+</dialog>
+<script>
+const currencies = {
+  USD: ['US dollar', '$', 1], EUR: ['Euro', '€', .92], GBP: ['British pound', '£', .78],
+  JPY: ['Japanese yen', '¥', 148.5], IDR: ['Indonesian rupiah', 'Rp', 15450],
+  SGD: ['Singapore dollar', 'S$', 1.34], AUD: ['Australian dollar', 'A$', 1.52],
+  CHF: ['Swiss franc', 'Fr', .89], AED: ['United Arab Emirates dirham', 'د.إ', 3.67]
+};
+let from = 'USD';
+let watch = ['EUR', 'JPY', 'GBP'];
+const amount = document.getElementById('amount');
+const base = document.getElementById('from');
+const list = document.getElementById('rows');
+const add = document.getElementById('add');
+const dialog = document.getElementById('add-dialog');
+const selection = document.getElementById('add-select');
+const valid = raw => raw !== '' && /^\d*\.?\d*$/.test(raw) && Number.isFinite(Number(raw)) && Number(raw) <= 999999999999;
+function converted(raw, source, target) {
+  if (!valid(raw)) return '—';
+  const digits = ['JPY', 'IDR'].includes(target) ? 0 : 2;
+  return new Intl.NumberFormat('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits }).format(Number(raw) / currencies[source][2] * currencies[target][2]);
+}
+function options(codes) {
+  return codes.map(code => `<option value="${code}">${code} · ${currencies[code][0]}</option>`).join('');
+}
+function choices() { return Object.keys(currencies).filter(code => code !== from && !watch.includes(code)); }
+function updateAmounts() {
+  list.querySelectorAll('[data-value]').forEach(el => { el.textContent = converted(amount.value, from, el.dataset.value); });
+  const invalid = !valid(amount.value);
+  amount.setAttribute('aria-invalid', String(invalid));
+  document.getElementById('amount-error').textContent = !invalid ? '' : amount.value === '' ? 'ⓘ Enter an amount.' : 'ⓘ Enter a number up to 999,999,999,999.';
+}
+function renderRows() {
+  list.innerHTML = watch.length ? watch.map(code => `<div class="row"><span class="coin" aria-hidden="true">${currencies[code][1]}</span><div class="name"><strong>${code}</strong><small>${currencies[code][0]}</small></div><div class="value" data-value="${code}">${converted(amount.value, from, code)}</div><button class="remove" data-remove="${code}" aria-label="Remove ${currencies[code][0]}"><svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m4 4 8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button></div>`).join('') : '<p class="empty">Add a currency to compare.</p>';
+  add.disabled = choices().length === 0;
+}
+base.innerHTML = options(Object.keys(currencies));
+base.value = from;
+base.addEventListener('change', () => {
+  const previous = from;
+  from = base.value;
+  watch = watch.map(code => code === from ? previous : code);
+  document.getElementById('base-symbol').textContent = currencies[from][1];
+  renderRows();
+  updateAmounts();
+});
+amount.addEventListener('input', updateAmounts);
+document.getElementById('converter').addEventListener('submit', event => { event.preventDefault(); updateAmounts(); });
+list.addEventListener('click', event => {
+  const button = event.target.closest('[data-remove]');
+  if (!button) return;
+  watch = watch.filter(code => code !== button.dataset.remove);
+  renderRows();
+  add.focus();
+});
+add.addEventListener('click', () => {
+  selection.innerHTML = options(choices());
+  dialog.showModal();
+  selection.focus();
+});
+document.getElementById('cancel-add').addEventListener('click', () => dialog.close());
+document.getElementById('add-form').addEventListener('submit', event => {
+  event.preventDefault();
+  if (!choices().includes(selection.value)) return;
+  watch.push(selection.value);
+  renderRows();
+  dialog.close();
+});
+dialog.addEventListener('close', () => add.disabled ? base.focus() : add.focus());
+renderRows();
+</script>
+</body>
+</html>
