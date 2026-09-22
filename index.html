@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Elsewhere · Currency converter</title>
+<title>Currency calculator</title>
 <style>
 :root {
   color-scheme: dark;
@@ -23,15 +23,13 @@
 * { box-sizing: border-box; }
 body { margin: 0; padding: 48px 16px; min-height: 100dvh; display: grid; place-items: center; background: var(--canvas); color: var(--ink); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
 .phone { width: min(100%, 410px); min-width: 0; background: repeating-linear-gradient(0deg, transparent 0 2px, oklch(1 0 0 / .012) 2px 3px), linear-gradient(115deg, oklch(.32 .014 250), var(--paper) 42%, oklch(.255 .012 250)); border: 7px solid var(--frame); border-radius: 44px; overflow: hidden; box-shadow: 0 0 0 1px oklch(.13 .01 250), 0 0 0 2px oklch(.48 .014 250), inset 0 1px 1px oklch(1 0 0 / .15), 0 8px 12px oklch(0 0 0 / .3), 0 30px 70px oklch(0 0 0 / .4); }
-.status { height: 54px; padding: 15px 24px 10px; display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: 600; }
-.status svg { width: 62px; height: 14px; }
 .home { width: 110px; height: 4px; border-radius: 4px; background: oklch(.16 .01 250); box-shadow: 0 1px 0 oklch(1 0 0 / .13); margin: 8px auto 10px; }
 button, input, select { font: inherit; color: inherit; touch-action: manipulation; }
 button, select { cursor: pointer; }
 button { border: 0; }
 button:active { transform: scale(.96); }
 button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; }
-.app { width: 100%; min-height: 666px; display: flex; flex-direction: column; padding: 18px 24px 20px; }
+.app { width: 100%; min-height: 666px; display: flex; flex-direction: column; padding: 32px 24px 20px; }
 header { margin-bottom: 28px; display: flex; align-items: center; justify-content: space-between; }
 h1 { margin: 0; font-size: 20px; font-weight: 600; letter-spacing: -.6px; color: oklch(.78 .012 250); text-shadow: 0 1px 0 oklch(.08 .01 250); }
 .amount-panel { padding: 18px 20px 12px; margin-bottom: 24px; border: 5px solid oklch(.16 .009 250); border-radius: 17px; background: linear-gradient(150deg, oklch(.26 .025 80), oklch(.19 .014 80) 65%); color: var(--accent); box-shadow: 0 1px 0 oklch(1 0 0 / .15), 0 -1px 1px oklch(0 0 0 / .5), inset 0 3px 9px oklch(0 0 0 / .6); --line: oklch(.82 .12 75 / .4); }
@@ -56,7 +54,7 @@ input.amount:focus, select:focus, input.amount:active, select:active { outline: 
 .value { text-align: right; font-size: 23px; letter-spacing: -.5px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; text-shadow: 0 2px 1px oklch(0 0 0 / .5); }
 .remove { display: grid; place-items: center; min-width: 44px; min-height: 44px; padding: 0; background: transparent; border: 0; border-radius: 8px; color: var(--muted); }
 .remove svg { width: 16px; height: 16px; }
-.add { min-height: 44px; padding: 0 12px; background: var(--key); color: var(--ink); border: 1px solid oklch(.17 .01 250); border-radius: 12px; font-size: 13px; box-shadow: var(--raised); text-shadow: 0 1px 1px oklch(0 0 0 / .6); }
+.add, .actions .primary { min-height: 44px; padding: 0 12px; background: var(--key); color: var(--ink); border: 1px solid oklch(.17 .01 250); border-radius: 12px; font-size: 13px; box-shadow: var(--raised); text-shadow: 0 1px 1px oklch(0 0 0 / .6); }
 .add:not(:disabled):active, .actions button:active { transform: translateY(2px); box-shadow: inset 0 2px 4px oklch(0 0 0 / .4), 0 1px 0 oklch(1 0 0 / .08); }
 .add:disabled { color: var(--muted); cursor: default; }
 footer { margin-top: auto; padding-top: 32px; text-align: center; font-size: 11px; color: var(--muted); }
@@ -68,10 +66,10 @@ dialog label { display: block; color: var(--muted); font-size: 12px; }
 dialog select { width: 100%; margin: 8px 0 24px; color: var(--ink); background-color: var(--paper); border-color: var(--line); color-scheme: dark; box-shadow: inset 0 2px 4px oklch(0 0 0 / .25); }
 dialog select:focus, dialog select:active { background-color: var(--tint); }
 .actions { display: flex; justify-content: flex-end; gap: 12px; }
-.actions button { min-height: 44px; padding: 0 16px; border-radius: 8px; background: var(--key); box-shadow: var(--raised); }
-.actions .primary { background: var(--accent); color: var(--paper); }
+.actions button { min-height: 44px; padding: 0 16px; border-radius: 12px; }
+.actions button:not(.primary) { background: transparent; color: var(--muted); }
 @media (hover: hover) and (pointer: fine) {
-  .add:not(:disabled):hover, .actions button:not(.primary):hover { background: linear-gradient(oklch(.42 .013 250), oklch(.33 .013 250)); }
+  .add:not(:disabled):hover, .actions .primary:hover { background: linear-gradient(oklch(.42 .013 250), oklch(.33 .013 250)); }
   .remove:hover { color: var(--ink); background: oklch(1 0 0 / .04); }
   .amount:hover, select:hover { border-color: var(--line); }
   .amount[aria-invalid="true"]:hover { border-bottom-color: var(--error); }
@@ -82,9 +80,8 @@ dialog select:focus, dialog select:active { background-color: var(--tint); }
 </head>
 <body>
 <div class="phone">
-<div class="status" aria-hidden="true"><span>9:41</span><svg viewBox="0 0 62 14" fill="none"><path d="M1 12V9h3v3H1Zm5 0V6h3v6H6Zm5 0V3h3v9h-3Zm5 0V0h3v12h-3Z" fill="currentColor"/><path d="M24 4a10 10 0 0 1 14 0M27 7a6 6 0 0 1 8 0M30 10a2 2 0 0 1 2 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><rect x="43" y="2" width="16" height="10" rx="2" stroke="currentColor"/><rect x="45" y="4" width="12" height="6" rx="1" fill="currentColor"/><path d="M61 5v4" stroke="currentColor" stroke-width="2"/></svg></div>
 <main class="app">
-  <header><h1>elsewhere</h1></header>
+  <header><h1>Currency calculator</h1></header>
   <form id="converter" class="amount-panel">
     <div class="currency"><span class="coin" id="base-symbol" aria-hidden="true">$</span><select id="from" aria-label="Base currency"></select></div>
     <label class="amount-label" for="amount">Amount</label>
