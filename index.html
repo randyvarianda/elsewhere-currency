@@ -90,7 +90,7 @@ dialog select:focus, dialog select:active { background-color: var(--tint); }
   </form>
   <button class="add" id="add">+ Add currency</button>
   <section id="rows" aria-label="Converted amounts" aria-live="polite"></section>
-  <footer>Sample rates · Not live</footer>
+  <footer><span id="rate-status" role="status">Loading exchange rates…</span><br><a href="https://frankfurter.dev/" target="_blank" rel="noopener" style="color:inherit">Frankfurter · Daily reference rates</a><br><button id="refresh-rates" type="button" style="min-height:44px;background:transparent;color:inherit">Refresh rates</button></footer>
 </main>
 <div class="home" aria-hidden="true"></div>
 </div>
@@ -104,11 +104,49 @@ dialog select:focus, dialog select:active { background-color: var(--tint); }
 </dialog>
 <script>
 const currencies = {
-  USD: ['US dollar', '$', 1], EUR: ['Euro', '€', .92], GBP: ['British pound', '£', .78],
-  JPY: ['Japanese yen', '¥', 148.5], IDR: ['Indonesian rupiah', 'Rp', 15450],
-  SGD: ['Singapore dollar', 'S$', 1.34], AUD: ['Australian dollar', 'A$', 1.52],
-  CHF: ['Swiss franc', 'Fr', .89], AED: ['United Arab Emirates dirham', 'د.إ', 3.67]
+  USD: ['US dollar', '$'], EUR: ['Euro', '€'], GBP: ['British pound', '£'],
+  JPY: ['Japanese yen', '¥'], IDR: ['Indonesian rupiah', 'Rp'],
+  SGD: ['Singapore dollar', 'S$'], AUD: ['Australian dollar', 'A$'],
+  CHF: ['Swiss franc', 'Fr'], AED: ['United Arab Emirates dirham', 'د.إ']
 };
+let rates = null;
+let rateDate = '';
+function parseRates(data) {
+  if (!Array.isArray(data)) throw new Error('Invalid rate response');
+  const next = { USD: 1 };
+  const dates = [];
+  for (const code of Object.keys(currencies).filter(code => code !== 'USD')) {
+    const row = data.find(row => row.base === 'USD' && row.quote === code);
+    if (!row || typeof row.rate !== 'number' || !Number.isFinite(row.rate) || row.rate <= 0 || !/^\d{4}-\d{2}-\d{2}$/.test(row.date)) throw new Error('Missing or invalid rate');
+    next[code] = row.rate;
+    dates.push(row.date);
+  }
+  dates.sort();
+  return { rates: next, date: dates[0] === dates.at(-1) ? dates[0] : `${dates[0]} – ${dates.at(-1)}` };
+}
+async function loadRates() {
+  const refresh = document.getElementById('refresh-rates');
+  const status = document.getElementById('rate-status');
+  refresh.disabled = true;
+  status.textContent = rates ? `Updating · Rates dated ${rateDate}` : 'Loading exchange rates…';
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 12000);
+  try {
+    const quotes = Object.keys(currencies).filter(code => code !== 'USD').join(',');
+    const response = await fetch(`https://api.frankfurter.dev/v2/rates?base=USD&quotes=${quotes}`, { signal: controller.signal });
+    if (!response.ok) throw new Error('Rate service unavailable');
+    const next = parseRates(await response.json());
+    rates = next.rates;
+    rateDate = next.date;
+    status.textContent = `Rates dated ${rateDate}`;
+    updateAmounts();
+  } catch {
+    status.textContent = rates ? `Update failed · Using rates dated ${rateDate}` : 'Rates unavailable. Try again.';
+  } finally {
+    clearTimeout(timeout);
+    refresh.disabled = false;
+  }
+}
 let from = 'USD';
 let watch = ['EUR', 'JPY', 'GBP'];
 const amount = document.getElementById('amount');
@@ -119,9 +157,9 @@ const dialog = document.getElementById('add-dialog');
 const selection = document.getElementById('add-select');
 const valid = raw => raw !== '' && /^\d*\.?\d*$/.test(raw) && Number.isFinite(Number(raw)) && Number(raw) <= 999999999999;
 function converted(raw, source, target) {
-  if (!valid(raw)) return '—';
+  if (!valid(raw) || !rates) return '—';
   const digits = ['JPY', 'IDR'].includes(target) ? 0 : 2;
-  return new Intl.NumberFormat('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits }).format(Number(raw) / currencies[source][2] * currencies[target][2]);
+  return new Intl.NumberFormat('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits }).format(Number(raw) / rates[source] * rates[target]);
 }
 function options(codes) {
   return codes.map(code => `<option value="${code}">${code} · ${currencies[code][0]}</option>`).join('');
@@ -171,6 +209,8 @@ document.getElementById('add-form').addEventListener('submit', event => {
 });
 dialog.addEventListener('close', () => add.disabled ? base.focus() : add.focus());
 renderRows();
+document.getElementById('refresh-rates').addEventListener('click', loadRates);
+loadRates();
 </script>
 </body>
 </html>
