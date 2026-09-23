@@ -1,10 +1,9 @@
-# Elsewhere
+# Currency calculator
 
-A static mobile currency converter with a skeuomorphic Compare interface.
+A skeuomorphic mobile currency calculator with multi-currency comparison.
 
 Live site: https://randyvarianda.github.io/elsewhere-currency/
-Repository: https://github.com/randyvarianda/elsewhere-currency
 
-Rates are fixed sample data, not live market rates. No API keys or build step are required.
+Rates load from the public Frankfurter v2 API. These are daily reference rates, not real-time trading quotes. The app displays the source dates and offers manual refresh. A failed refresh retains rates already loaded in the current session with a warning; initial failure leaves results unavailable.
 
-GitHub Pages serves index.html from the main branch root. Publish future edits to that file to update the site.
+No API key or build step is required. GitHub Pages serves index.html from the main branch root.
